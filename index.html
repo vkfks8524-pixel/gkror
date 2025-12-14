@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>하객 명단</title>
+  <style>
+    :root{
+      --bg1:#fff7fb;
+      --bg2:#f3fbff;
+      --card:#ffffff;
+      --line:rgba(20, 32, 60, .10);
+      --text:#1b2540;
+      --muted:#5f6a86;
+
+      --pink:#ff5da8;
+      --mint:#17c3b2;
+      --sky:#1aa7ff;
+      --sun:#ffb703;
+
+      --shadow: 0 14px 40px rgba(23, 38, 80, .10);
+      --shadow2: 0 10px 22px rgba(23, 38, 80, .08);
+
+      --r:18px;
+      --r2:26px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 10% 0%, rgba(255,93,168,.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(26,167,255,.16), transparent 60%),
+        radial-gradient(900px 700px at 50% 120%, rgba(23,195,178,.16), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px 16px 220px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-top: 6px;
+    }
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .brand h1{
+      margin:0;
+      font-size: 20px;
+      letter-spacing:-.3px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background:
+        radial-gradient(16px 16px at 35% 35%, rgba(255,255,255,.95), rgba(255,255,255,0)),
+        linear-gradient(135deg, rgba(255,93,168,.95), rgba(26,167,255,.88));
+      box-shadow: var(--shadow2);
+      display:grid;
+      place-items:center;
+      font-size:18px;
+    }
+    .brand p{
+      margin:0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    .picker{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .pick{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.70);
+      backdrop-filter: blur(10px);
+      border-radius: var(--r2);
+      box-shadow: var(--shadow);
+      padding: 14px 14px 12px;
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+      user-select:none;
+      min-height: 132px;
+    }
+    .pick:active{ transform: scale(.99); }
+
+    .pick::before{
+      content:"";
+      position:absolute; inset:-60px -60px auto auto;
+      width:140px;height:140px;border-radius:50%;
+      filter: blur(0px);
+      opacity:.35;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,0) 55%),
+                  radial-gradient(circle at 60% 60%, rgba(255,183,3,.55), rgba(255,183,3,0) 60%);
+      transform: rotate(12deg);
+    }
+
+    .pick .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.74);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .emoji{
+      width:34px;height:34px;border-radius:14px;
+      display:grid; place-items:center;
+      box-shadow: var(--shadow2);
+      font-size: 18px;
+    }
+    .emoji.groom{ background: linear-gradient(135deg, rgba(26,167,255,.22), rgba(23,195,178,.18)); }
+    .emoji.bride{ background: linear-gradient(135deg, rgba(255,93,168,.22), rgba(255,183,3,.18)); }
+
+    .pick h2{
+      margin: 10px 0 6px;
+      font-size: 17px;
+      letter-spacing:-.2px;
+    }
+    .pick p{
+      margin:0;
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+    .hint{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(27,37,64,.88);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .pillDot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(135deg, var(--pink), var(--sky));
+      box-shadow: 0 8px 16px rgba(255,93,168,.18);
+    }
+
+    /* bottom cute drawer */
+    .drawer{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      padding: 10px 12px 12px;
+      display:flex;
+      justify-content:center;
+      z-index: 50;
+      pointer-events:none;
+    }
+
+    .panel{
+      width: min(560px, 100%);
+      pointer-events:auto;
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(18px);
+      border-radius: 26px;
+      box-shadow: 0 18px 60px rgba(23,38,80,.14);
+      overflow:hidden;
+      transform: translateY(calc(100% - 74px));
+      transition: transform .22s ease;
+    }
+    .panel.open{ transform: translateY(0); }
+
+    .panelHead{
+      padding: 10px 12px 10px;
+      border-bottom: 1px solid rgba(20,32,60,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72));
+    }
+
+    .handle{
+      width: 52px;
+      height: 6px;
+      border-radius: 999px;
+      margin: 6px auto 10px;
+      background: rgba(27,37,64,.14);
+    }
+
+    .whoRow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .who{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .who .k{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .who .v{
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .btn{
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.92);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 10px 18px rgba(23,38,80,.06);
+      transition: transform .12s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .btn:active{ transform: scale(.99); }
+    .btn.ghost{
+      box-shadow:none;
+      background: transparent;
+    }
+
+    .searchRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top: 10px;
+    }
+
+    .input{
+      flex:1;
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.92);
+      border-radius: 16px;
+      padding: 12px 12px;
+      font-size: 14px;
+      outline:none;
+      box-shadow: 0 10px 18px rgba(23,38,80,.06);
+    }
+    .input::placeholder{ color: rgba(95,106,134,.78); }
+
+    .metaRow{
+      margin-top: 10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pill{
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.86);
+      border-radius: 999px;
+      padding: 8px 10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      box-shadow: 0 10px 18px rgba(23,38,80,.05);
+    }
+    .pill b{ color: var(--text); }
+
+    /* list */
+    .list{
+      padding: 10px 12px 14px;
+      max-height: min(64vh, 560px);
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .row{
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.92);
+      border-radius: 18px;
+      box-shadow: 0 10px 18px rgba(23,38,80,.06);
+      padding: 12px 12px;
+      margin-bottom: 10px;
+
+      display:grid;
+      grid-template-columns: 56px 1fr;
+      grid-template-areas:
+        "no name"
+        "inv att"
+        "money money";
+      gap: 10px 10px;
+      align-items:center;
+    }
+
+    .c-no{
+      grid-area:no;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-weight: 900;
+      font-size: 13px;
+      color: rgba(27,37,64,.88);
+      background: linear-gradient(135deg, rgba(255,93,168,.12), rgba(26,167,255,.10));
+      border: 1px solid rgba(20,32,60,.08);
+      border-radius: 14px;
+      height: 36px;
+    }
+
+    .c-name{
+      grid-area:name;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .c-inv{ grid-area:inv; display:flex; align-items:center; gap:8px; }
+    .c-att{ grid-area:att; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+    .money{
+      grid-area:money;
+      display:flex;
+      justify-content:flex-end;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing:-.2px;
+      padding-top: 2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .money.muted{ color: rgba(95,106,134,.9); font-weight: 800; }
+
+    .tag{
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.92);
+      color: rgba(27,37,64,.88);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      max-width: 100%;
+      box-shadow: 0 10px 18px rgba(23,38,80,.05);
+      white-space:nowrap;
+    }
+
+    .att-ok{
+      border-color: rgba(23,195,178,.25);
+      background: rgba(23,195,178,.10);
+      color: #0c6e64;
+    }
+    .att-no{
+      border-color: rgba(255,93,168,.25);
+      background: rgba(255,93,168,.10);
+      color: #a11152;
+    }
+
+    .empty{
+      border: 1px dashed rgba(20,32,60,.18);
+      background: rgba(255,255,255,.70);
+      border-radius: 18px;
+      padding: 18px 14px;
+      text-align:center;
+      color: var(--muted);
+      line-height:1.5;
+      box-shadow: 0 10px 18px rgba(23,38,80,.05);
+    }
+    .kbd{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(20,32,60,.10);
+      background: rgba(255,255,255,.92);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+      margin: 0 3px;
+      box-shadow: 0 10px 18px rgba(23,38,80,.05);
+    }
+
+    /* small helper */
+    .tiny{
+      font-size: 12px;
+      color: rgba(95,106,134,.92);
+    }
+
+    /* accessibility focus */
+    .pick:focus-visible, .btn:focus-visible, .input:focus-visible{
+      outline: 3px solid rgba(26,167,255,.28);
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1><span class="logo">💒</span>하객 명단</h1>
+        <p>아래에서 <b>신랑</b> 또는 <b>신부</b>를 누르면<br/>하단에서 명단이 귀엽게 “쓱” 올라와요 🐣</p>
+      </div>
+    </header>
+
+    <section class="picker" aria-label="선택">
+      <div class="pick" id="btnGroom" role="button" tabindex="0" aria-label="신랑측 명단 보기">
+        <div class="top">
+          <span class="badge">👔 신랑</span>
+          <span class="emoji groom">🧸</span>
+        </div>
+        <h2>신랑측</h2>
+        <p>신랑측 하객 명단을 확인해요.</p>
+        <div class="hint"><span class="pillDot"></span><span>눌러서 열기</span></div>
+      </div>
+
+      <div class="pick" id="btnBride" role="button" tabindex="0" aria-label="신부측 명단 보기">
+        <div class="top">
+          <span class="badge">👰 신부</span>
+          <span class="emoji bride">🐰</span>
+        </div>
+        <h2>신부측</h2>
+        <p>신부측 하객 명단을 확인해요.</p>
+        <div class="hint"><span class="pillDot"></span><span>눌러서 열기</span></div>
+      </div>
+    </section>
+
+    <div style="margin-top:14px" class="tiny">
+      💡 이름으로 검색하면 실시간으로 필터링됩니다. <span class="kbd">Esc</span>로 패널 닫기
+    </div>
+  </div>
+
+  <!-- Bottom Drawer -->
+  <div class="drawer">
+    <div class="panel" id="panel" aria-label="명단 패널">
+      <div class="panelHead" id="panelHead">
+        <div class="handle" title="여기를 탭하면 열고/닫을 수 있어요"></div>
+
+        <div class="whoRow">
+          <div class="who">
+            <div class="k">현재 보기 <span class="tiny">• 더블탭하면 접기/펼치기</span></div>
+            <div class="v" id="whoTitle">선택 안 됨</div>
+          </div>
+          <button class="btn ghost" id="closeBtn" type="button">닫기</button>
+        </div>
+
+        <div class="searchRow">
+          <input class="input" id="q" placeholder="이름 검색 (예: 김지훈)" autocomplete="off" inputmode="search" />
+          <button class="btn" id="clearBtn" type="button">지우기</button>
+        </div>
+
+        <div class="metaRow" id="metaRow"></div>
+      </div>
+
+      <div class="list" id="list"></div>
+    </div>
+  </div>
+
+  <script>
+    // ====== 하드코딩 데이터 ======
+    const brideData = [
+      {no:1, name:"고세령", inv:"📱모청", att:"❌", money:"70,000₩"},
+      {no:2, name:"고은비", inv:"💌종첩", att:"⭕", money:"500,000₩"},
+      {no:3, name:"곽민희", inv:"📱모청", att:"❌", money:"300,000₩"},
+      {no:4, name:"권다희", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:5, name:"권수안", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:6, name:"김금순", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:7, name:"김기범", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:8, name:"김대연", inv:"💌종첩", att:"❌", money:""},
+      {no:9, name:"김대연오빠", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:10, name:"김대환", inv:"📱모청", att:"❌", money:"150,000₩"},
+      {no:11, name:"김도희", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:12, name:"김동건", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:13, name:"김련경", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:14, name:"김명연오빠", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:15, name:"김문주", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:16, name:"김민서", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:17, name:"김민수", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:18, name:"김범진", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:19, name:"김병찬", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:20, name:"김보성", inv:"📱모청", att:"⭕", money:"70,000₩"},
+      {no:21, name:"김복녀대표님", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:22, name:"김산", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:23, name:"김성훈", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:24, name:"김세정", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:25, name:"김수진", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:26, name:"김신영(이선)", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:27, name:"김용범(김태하)", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:28, name:"김유라", inv:"📱모청", att:"❌", money:"300,000₩"},
+      {no:29, name:"김유미", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:30, name:"김의건", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:31, name:"김의찬", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:32, name:"김인혜", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:33, name:"김종표", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:34, name:"김준호", inv:"📱모청", att:"❌", money:"150,000₩"},
+      {no:35, name:"김중훈", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:36, name:"김지연", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:37, name:"김지웅", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:38, name:"김지윤", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:39, name:"김지은", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:40, name:"김지훈", inv:"💌종첩", att:"⭕", money:"300,000₩"},
+      {no:41, name:"김진성", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:42, name:"김현지", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:43, name:"남태관", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:44, name:"노희국", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:45, name:"마웅규", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:46, name:"문슬", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:47, name:"문주희", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:48, name:"박교령", inv:"📱모청", att:"❌", money:"80,000₩"},
+      {no:49, name:"박규랑", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:50, name:"박기범", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:51, name:"박민홍", inv:"💌종첩", att:"⭕", money:"150,000₩"},
+      {no:52, name:"박세련", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:53, name:"박승국", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:54, name:"박승배", inv:"📱모청", att:"❌", money:"키프트콘30000"},
+      {no:55, name:"박유빈", inv:"💌종첩", att:"⭕", money:"300,000₩"},
+      {no:56, name:"박재완", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:57, name:"박재형", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:58, name:"박종혁", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:59, name:"박주환", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:60, name:"박준규", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:61, name:"박지선", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:62, name:"박지용", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:63, name:"박혜림", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:64, name:"박혜원", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:65, name:"방의연", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:66, name:"변영원", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:67, name:"서동오", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:68, name:"서정환", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:69, name:"서지혜", inv:"💌종첩", att:"❌", money:"0₩"},
+      {no:70, name:"소장호", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:71, name:"송민희", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:72, name:"송영근", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:73, name:"시현민", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:74, name:"신민우", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:75, name:"신성진", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:76, name:"심재완", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:77, name:"심형우", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:78, name:"안미빈", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:79, name:"안수민", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:80, name:"안지영", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:81, name:"오세준", inv:"💌종첩", att:"❌", money:"0₩"},
+      {no:82, name:"위슬희", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:83, name:"유기선", inv:"💌종첩", att:"⭕", money:"300,000₩"},
+      {no:84, name:"유명진", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:85, name:"유상아", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:86, name:"유세린", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:87, name:"유정국장님", inv:"💌종첩", att:"❌", money:"50,000₩"},
+      {no:88, name:"유종욱", inv:"📱모청", att:"❌", money:"상아선배"},
+      {no:89, name:"유호빈", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:90, name:"윤경화", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:91, name:"은빛나래", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:92, name:"이광근/신우", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:93, name:"이나경", inv:"💌종첩", att:"⭕", money:"500,000₩"},
+      {no:94, name:"이나원", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:95, name:"이다솜", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:96, name:"이미지", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:97, name:"이성재", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:98, name:"이수형", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:99, name:"이슬아", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:100, name:"이승우", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:101, name:"이승한", inv:"💌종첩", att:"⭕", money:"신지랑"},
+      {no:102, name:"이승환", inv:"💌종첩", att:"⭕", money:"50,000₩"},
+      {no:103, name:"이영재", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:104, name:"이윤규", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:105, name:"이은성", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:106, name:"이은혜", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:107, name:"이의현", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:108, name:"이제이", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:109, name:"이주연", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:110, name:"이주환", inv:"💌종첩", att:"⭕", money:"150,000₩"},
+      {no:111, name:"이준우", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:112, name:"이찬형", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:113, name:"이채우", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:114, name:"임범수", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:115, name:"임사랑", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:116, name:"임소혜", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:117, name:"임수현", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:118, name:"임태현", inv:"💌종첩", att:"❌", money:"200,000₩"},
+      {no:119, name:"장규형", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:120, name:"장민준", inv:"💌종첩", att:"⭕", money:"150,000₩"},
+      {no:121, name:"장성환", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:122, name:"장용진", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:123, name:"장채은", inv:"📱모청", att:"⭕", money:"준구오빠"},
+      {no:124, name:"장혜원", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:125, name:"장효민", inv:"💌종첩", att:"⭕", money:"350,000₩"},
+      {no:126, name:"재열오빠", inv:"💌종첩", att:"❌", money:"70,000₩"},
+      {no:127, name:"전다영", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:128, name:"전신지", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:129, name:"정민승", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:130, name:"정민찬", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:131, name:"정영환", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:132, name:"정우용", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:133, name:"정주호", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:134, name:"정한별", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:135, name:"조동현", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:136, name:"조보경", inv:"💌종첩", att:"❌", money:"300,000₩"},
+      {no:137, name:"조용의", inv:"📱모청", att:"❌", money:"110,000₩"},
+      {no:138, name:"조인수", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:139, name:"조희성", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:140, name:"양준호오빠", inv:"💌종첩", att:"❌", money:"0₩"},
+      {no:141, name:"지정우", inv:"💌종첩", att:"⭕", money:"50,000₩"},
+      {no:142, name:"천영현", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:143, name:"최무결", inv:"💌종첩", att:"⭕", money:"400,000₩"},
+      {no:144, name:"최민기", inv:"📱모청", att:"⭕", money:"300,000₩"},
+      {no:145, name:"최보규", inv:"📱모청", att:"⭕", money:"300,000₩"},
+      {no:146, name:"최석원", inv:"📱모청", att:"❌", money:"윤정언니"},
+      {no:147, name:"최우선", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:148, name:"최윤정", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:149, name:"최이수", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:150, name:"추계론", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:151, name:"하은유", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:152, name:"한상길", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:153, name:"한여울", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:154, name:"한준구", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:155, name:"한태석", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:156, name:"홍예원", inv:"💌종첩", att:"⭕", money:"300,000₩"},
+      {no:157, name:"홍은표", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:158, name:"황의정", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:159, name:"효민이어머니", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:160, name:"김민재", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:161, name:"박솔지", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:162, name:"홍지호", inv:"📱모청", att:"❌", money:"200,000₩"},
+      {no:163, name:"홍준기", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:164, name:"나소희", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:165, name:"정영진", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:166, name:"신주호", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:167, name:"김동조", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:168, name:"문현진", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:169, name:"강대용", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:170, name:"서동복", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:171, name:"이승진", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:172, name:"장준현", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:173, name:"이정보팀장님", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:174, name:"이서율", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:175, name:"손지원", inv:"📱모청", att:"❌", money:"선물"},
+      {no:176, name:"김영남", inv:"", att:"❌", money:"50,000₩"}
+    ];
+
+    // 신랑측 예시 데이터 (유사한 형태)
+    const groomData = [
+      {no:1, name:"강민수", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:2, name:"고준호", inv:"💌종첩", att:"❌", money:"50,000₩"},
+      {no:3, name:"곽지훈", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:4, name:"권민재", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:5, name:"김도현", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:6, name:"김상훈", inv:"📱모청", att:"⭕", money:"150,000₩"},
+      {no:7, name:"김선우", inv:"📱모청", att:"❌", money:"100,000₩"},
+      {no:8, name:"김태훈", inv:"💌종첩", att:"⭕", money:"200,000₩"},
+      {no:9, name:"김하늘", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:10, name:"남윤호", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:11, name:"노진우", inv:"💌종첩", att:"❌", money:"70,000₩"},
+      {no:12, name:"문지성", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:13, name:"박성민", inv:"📱모청", att:"⭕", money:"300,000₩"},
+      {no:14, name:"박준형", inv:"💌종첩", att:"❌", money:"100,000₩"},
+      {no:15, name:"서민규", inv:"📱모청", att:"❌", money:"0₩"},
+      {no:16, name:"송지훈", inv:"📱모청", att:"⭕", money:"200,000₩"},
+      {no:17, name:"신현우", inv:"💌종첩", att:"⭕", money:"100,000₩"},
+      {no:18, name:"안준서", inv:"📱모청", att:"❌", money:"50,000₩"},
+      {no:19, name:"오세훈", inv:"📱모청", att:"⭕", money:"100,000₩"},
+      {no:20, name:"유정민", inv:"💌종첩", att:"⭕", money:"500,000₩"}
+    ];
+
+    // ====== UI 로직 ======
+    const panel = document.getElementById("panel");
+    const listEl = document.getElementById("list");
+    const metaRow = document.getElementById("metaRow");
+    const whoTitle = document.getElementById("whoTitle");
+    const q = document.getElementById("q");
+    const clearBtn = document.getElementById("clearBtn");
+    const closeBtn = document.getElementById("closeBtn");
+    const panelHead = document.getElementById("panelHead");
+    const btnBride = document.getElementById("btnBride");
+    const btnGroom = document.getElementById("btnGroom");
+
+    let currentWho = null;
+    let currentData = [];
+
+    function openPanel(){
+      panel.classList.add("open");
+      setTimeout(()=> q.focus({preventScroll:true}), 120);
+    }
+    function closePanel(){
+      panel.classList.remove("open");
+    }
+    function togglePanel(){
+      panel.classList.toggle("open");
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function parseMoneyToNumber(m){
+      if(!m) return null;
+      const cleaned = String(m).replace(/\s/g,"");
+      const match = cleaned.match(/^([0-9]{1,3}(?:,[0-9]{3})*|[0-9]+)₩$/);
+      if(!match) return null;
+      const n = Number(match[1].replace(/,/g,""));
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function formatKRW(n){
+      try { return n.toLocaleString("ko-KR") + "₩"; }
+      catch { return String(n) + "₩"; }
+    }
+
+    function calcMeta(data){
+      const total = data.length;
+      const ok = data.filter(d => d.att === "⭕").length;
+      const no = data.filter(d => d.att === "❌").length;
+
+      let sum = 0, sumCounted = 0;
+      for(const d of data){
+        const v = parseMoneyToNumber(d.money);
+        if(v !== null){ sum += v; sumCounted++; }
+      }
+      return { total, ok, no, sum, sumCounted };
+    }
+
+    function renderMeta(filtered){
+      const meta = calcMeta(filtered);
+      const base = calcMeta(currentData);
+
+      metaRow.innerHTML = `
+        <span class="pill">표시 <b>${meta.total}</b> / 전체 <b>${base.total}</b></span>
+        <span class="pill">참석 ⭕ <b>${meta.ok}</b></span>
+        <span class="pill">불참 ❌ <b>${meta.no}</b></span>
+        <span class="pill">합계 <b>${formatKRW(meta.sum)}</b> <span class="tiny">(${meta.sumCounted}건)</span></span>
+      `;
+    }
+
+    function rowHTML(d){
+      const inv = d.inv || "—";
+      const moneyText = d.money ? d.money : "—";
+      const moneyMuted = d.money ? "" : "muted";
+      const attClass = d.att === "⭕" ? "att-ok" : "att-no";
+
+      return `
+        <div class="row">
+          <div class="c-no">${d.no}</div>
+          <div class="c-name" title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</div>
+
+          <div class="c-inv">
+            <span class="tag">${escapeHtml(inv)}</span>
+          </div>
+
+          <div class="c-att">
+            <span class="tag ${attClass}">${d.att}</span>
+          </div>
+
+          <div class="money ${moneyMuted}" title="${escapeHtml(moneyText)}">${escapeHtml(moneyText)}</div>
+        </div>
+      `;
+    }
+
+    function renderList(){
+      const keyword = q.value.trim();
+      let filtered = currentData;
+
+      if(keyword){
+        filtered = currentData.filter(d => String(d.name).includes(keyword));
+      }
+
+      renderMeta(filtered);
+
+      if(!filtered.length){
+        listEl.innerHTML = `
+          <div class="empty">
+            검색 결과가 없어요 🫧<br/>
+            <span class="kbd">지우기</span>를 누르거나 다른 이름으로 검색해보세요.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(rowHTML).join("");
+    }
+
+    function setWho(who){
+      currentWho = who;
+      currentData = (who === "신부") ? brideData : groomData;
+      whoTitle.textContent = `${who}측 명단`;
+      q.value = "";
+      renderList();
+      openPanel();
+    }
+
+    btnBride.addEventListener("click", () => setWho("신부"));
+    btnGroom.addEventListener("click", () => setWho("신랑"));
+    btnBride.addEventListener("keydown", (e) => { if(e.key === "Enter" || e.key === " ") setWho("신부"); });
+    btnGroom.addEventListener("keydown", (e) => { if(e.key === "Enter" || e.key === " ") setWho("신랑"); });
+
+    q.addEventListener("input", renderList);
+
+    clearBtn.addEventListener("click", () => {
+      q.value = "";
+      renderList();
+      q.focus();
+    });
+
+    closeBtn.addEventListener("click", closePanel);
+
+    // 더블탭(더블클릭)으로 토글
+    panelHead.addEventListener("dblclick", togglePanel);
+
+    // ESC로 닫기
+    window.addEventListener("keydown", (e) => {
+      if(e.key === "Escape") closePanel();
+    });
+
+    // 최초 안내
+    whoTitle.textContent = "신랑/신부를 선택하세요";
+    metaRow.innerHTML = `<span class="pill">아래 명단은 선택 후 표시됩니다 ✨</span>`;
+    listEl.innerHTML = `
+      <div class="empty">
+        아직 명단이 열리지 않았어요 🐣<br/>
+        위에서 <b>신랑</b> 또는 <b>신부</b>를 눌러주세요.
+      </div>
+    `;
+  </script>
+</body>
+</html>
